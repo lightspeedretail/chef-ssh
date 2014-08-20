@@ -4,6 +4,8 @@
 
 Provides LWRPs to manage system-wide and per-user `ssh_config` and `known_host` files. An additional LWRP for per user identity files is provided.
 
+Forked from github.com/markolson/chef-ssh
+
 ## Usage
 
 When using SSH with Chef deployments, it's crucial to not get any prompts for input. Adding entries to `known_hosts` files and better managing your per-connection configuration can help with this. 
