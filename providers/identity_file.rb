@@ -13,8 +13,7 @@ action :add do
 end
 
 action :remove do
-  directory_resource(:create)
-  file_resource(:create)
+  file_resource(:delete)
 end
 
 def directory_resource(exec_action)
@@ -33,28 +32,8 @@ def file_resource(exec_action)
     owner   new_resource.user   || new_resource.default_user
     group   new_resource.group  || new_resource.default_user
     mode    new_resource.default_path? ? 0644 : 0600
-    content file_content
+    content new_resource.content
     action  exec_action
   end
-end
-
-def file_content
-  content = File.read(new_resource.path)
-  fragment = fragment
-
-  first = fragment.split("\n").compact.first
-  last = fragment.split("\n").compactlast
-
-  fragment = nil unless Array(new_resource.action).include? :add
-  content.gsub(/#{first}(.*)#{last}/im, fragment)
-end
-
-def fragment
-  content = "Host #{new_resource.host.strip}\n"
-  content << new_resource.options.
-    map do { |k,v| "  #{k} #{v.to_s.strip}\n" }.
-    join("\n")
-  content << "#End Chef SSH for #{new_resource.host.strip}\n\n"
-  content
 end
 

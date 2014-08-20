@@ -1,39 +1,57 @@
+
 require 'shellwords'
-include Chef::SSH::PathHelpers
+
+def why_run_supported?
+  true
+end
+
+def use_inline_resources
+  true
+end
+
+def load_current_resource
+  @host, @port = new_resource.host.split(':')
+  @port = new_resource.port unless @port
+  @port = @port.to_i
+
+  @escaped = Shellwords.escape(@host)
+end
 
 action :add do
-  ssh_user = new_resource.user || 'root'
-  known_hosts_path = default_or_user_path(node['ssh']['known_hosts_path'], ssh_user)
-  host, port = new_resource.host.split(':')
-  # set the port to the default (22) if it wasn't already set
-  port = new_resource.port unless port
-
-  key = new_resource.key
-  if key.nil?
-    results = `ssh-keyscan #{new_resource.hashed ? '-H ' : ''} -p #{port.to_i} #{Shellwords.escape(host)}`
-    Chef::Application.fatal! results.strip if key =~ /getaddrinfo/
-    key = results.strip
+  unless key = new_resource.key
+    key = begin
+      results = key_scan
+      results.strip!
+      Chef::Application.fatal! results if key =~ /getaddrinfo/
+      results
+    end
   end
 
-  execute "add known_host entry for #{host}" do
-    not_if "ssh-keygen -H -F #{Shellwords.escape(host)} -f #{known_hosts_path} | grep 'Host #{host} found'"
-    command "echo '#{key}' >> #{known_hosts_path}"
-    user ssh_user
-  end
+  exists = key_exists?
 
-  log "entry_for_#{host}_exists" do
-    message "An entry for #{host} already exists in #{known_hosts_path}."
-    level :debug
-    only_if "ssh-keygen -H -F #{Shellwords.escape(host)} -f #{known_hosts_path} | grep 'Host #{host} found'"
+  execute "add known_host entry for #{@host}" do
+    command "echo '#{key}' >> #{new_resource.path}"
+    not_if { exists }
   end
 end
 
 action :remove do
-  ssh_user = new_resource.user || 'root'
-  known_hosts_path = default_or_user_path(node['ssh']['known_hosts_path'], ssh_user)
-  execute "remove known_host entry for #{new_resource.host}" do
+  exists = key_exists?
+
+  execute "remove known_host entry for #{@host}" do
     command "ssh-keygen -R #{Shellwords.escape(new_resource.host)}"
-    user ssh_user
+    user new_resource.user
     umask '0600'
+    only_if { exists }
   end
 end
+
+def key_scan
+  `ssh-keyscan #{new_resource.hashed ? '-H ' : ''} -p #{@port} #{@escaped}`
+end
+
+def key_exists?
+  `ssh-keygen -H -F #{@escaped} -f #{new_resource.path} | 
+   grep 'Host #{host} found'`
+end
+

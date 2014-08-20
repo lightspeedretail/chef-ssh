@@ -1,5 +1,9 @@
 # CHANGELOG for ssh
 
+## 1.0.0
+
+* Rewrite resource, providers and add identity_file
+
 ## 0.6.5
 
 * Add an option for the ssh port number to known_hosts (Scott Arthur)

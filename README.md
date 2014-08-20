@@ -2,7 +2,7 @@
 
 ## Description
 
-Provides 2 LWRPs to manage system-wide and per-user `ssh_config` and `known_host` files.
+Provides LWRPs to manage system-wide and per-user `ssh_config` and `known_host` files. An additional LWRP for per user identity files is provided.
 
 ## Usage
 
