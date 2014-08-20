@@ -3,11 +3,20 @@ actions :create, :delete
 default_action :create
 
 attribute :name,    kind_of: String, name_attribute: true
-attribute :content, kind_of: Hash
+attribute :content, kind_of: String
 attribute :user,    kind_of: String, required: true
-attribute :path,    kind_of: String, default: lazy { default_path }
+
+def group(arg=nil)
+  arg = user if @group.nil? and arg.nil?
+  set_or_return(:group, arg, kind_of: String)
+end
+
+def path(arg=nil)
+  arg = default_path if @path.nil? and arg.nil?
+  set_or_return(:path, arg, kind_of: String)
+end
 
 def default_path
-  "#{node[:password][:user][:dir]}/.ssh/#{name}"
+  "#{node[:etc][:passwd][user][:dir]}/.ssh/#{name}"
 end
 

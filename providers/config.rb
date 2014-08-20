@@ -18,7 +18,7 @@ action :remove do
 end
 
 def directory_resource(exec_action)
-  dir = File::basename(new_resource.path)
+  dir = ::File::dirname(new_resource.path)
 
   directory dir do
     owner   new_resource.user   || new_resource.default_user
@@ -39,20 +39,20 @@ def file_resource(exec_action)
 end
 
 def file_content
-  content = File.read(new_resource.path)
-  fragment = fragment
+  content = ::File.read(new_resource.path) rescue ''
+  value = fragment
 
-  first = fragment.split("\n").compact.first
-  last = fragment.split("\n").compactlast
+  first = value.split("\n").compact.first
+  last = value.split("\n").compact.last
 
-  fragment = nil unless Array(new_resource.action).include? :add
-  content.gsub(/#{first}(.*)#{last}/im, fragment)
+  value = nil unless Array(new_resource.action).include? :add
+  content.gsub(/#{first}(.*)#{last}/im, value)
 end
 
 def fragment
   content = "Host #{new_resource.host.strip}\n"
   content << new_resource.options.
-    map do { |k,v| "  #{k} #{v.to_s.strip}\n" }.
+    map { |k,v| "  #{k} #{v.to_s.strip}\n" }.
     join("\n")
   content << "#End Chef SSH for #{new_resource.host.strip}\n\n"
   content

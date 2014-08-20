@@ -7,7 +7,16 @@ attribute :port,    kind_of: Integer, default: 22
 attribute :hashed,  kind_of: [TrueClass, FalseClass], default: TrueClass
 attribute :key,     kind_of: String
 attribute :user,    kind_of: String
-attribute :path,    kind_of: String, default: lazy { default_path }
+
+def group(arg=nil)
+  arg = user if @group.nil? and arg.nil?
+  set_or_return(:group, arg, kind_of: String)
+end
+
+def path(arg=nil)
+  arg = default_path if @path.nil? and arg.nil?
+  set_or_return(:path, arg, kind_of: String)
+end
 
 def default_user
   "root"
@@ -15,7 +24,7 @@ end
 
 def default_path
   if user
-    "#{node[:password][:user][:dir]}/.ssh/known_hosts"
+    "#{node[:etc][:passwd][user][:dir]}/.ssh/known_hosts"
   else
     node[:ssh][:known_hosts_path]
   end
