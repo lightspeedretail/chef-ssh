@@ -45,8 +45,15 @@ def file_content
   first = value.split("\n").compact.first
   last = value.split("\n").compact.last
 
+  last << "\n\n"
+  value << "\n\n"
+
   value = nil unless Array(new_resource.action).include? :add
-  content.gsub(/#{first}(.*)#{last}/im, value)
+
+  if content.include?(value)
+  then content.gsub(/#{first}(.*)#{last}/im, value)
+  else content << "\n#{value}"
+  end
 end
 
 def fragment
@@ -54,7 +61,7 @@ def fragment
   content << new_resource.options.
     map { |k,v| "  #{k} #{v.to_s.strip}\n" }.
     join("\n")
-  content << "#End Chef SSH for #{new_resource.host.strip}\n\n"
+  content << "#End Chef SSH for #{new_resource.host.strip}"
   content
 end
 
