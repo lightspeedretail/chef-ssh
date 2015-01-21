@@ -29,12 +29,14 @@ def directory_resource(exec_action)
 end
 
 def file_resource(exec_action)
-  file new_resource.path do
+  file "ssh config for #{new_resource.host}" do
+    path    new_resource.path
     owner   new_resource.user   || new_resource.default_user
     group   new_resource.group  || new_resource.default_user
     mode    new_resource.default_path? ? 0644 : 0600
     content file_content
     action  exec_action
+    checksum nil
   end
 end
 
@@ -59,9 +61,9 @@ end
 def fragment
   content = "Host #{new_resource.host.strip}\n"
   content << new_resource.options.
-    map { |k,v| "  #{k} #{v.to_s.strip}\n" }.
+    map { |k,v| "  #{k} #{v.to_s.strip}" }.
     join("\n")
-  content << "#End Chef SSH for #{new_resource.host.strip}"
+  content << "\n#End Chef SSH for #{new_resource.host.strip}"
   content
 end
 
